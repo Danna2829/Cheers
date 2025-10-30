@@ -5,37 +5,55 @@ include("conexion.php");
 
 // Crear producto
 if (isset($_POST['add'])) {
-    $nombre = $_POST['nombre'];
+    $nombre      = $_POST['nombre'];
     $descripcion = $_POST['descripcion'];
-    $precio = $_POST['precio'];
-    $stock = $_POST['stock'];
-    $id_tipo = $_POST['id_tipo'];
-    mysqli_query($conn, "INSERT INTO productos (nombre, descripcion, precio, stock, id_tipo) 
-                         VALUES ('$nombre', '$descripcion', '$precio', '$stock', '$id_tipo')");
+    $precio      = $_POST['precio'];
+    $stock       = $_POST['stock'];
+    $id_tipo     = $_POST['id_tipo'];
+
+    $stmt = mysqli_prepare($conn, "INSERT INTO productos (nombre, descripcion, precio, stock, id_tipo) VALUES (?, ?, ?, ?, ?)");
+    mysqli_stmt_bind_param($stmt, "ssdii", $nombre, $descripcion, $precio, $stock, $id_tipo);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
     header("Location: productos.php");
+    exit;
 }
 
 // Actualizar producto
 if (isset($_POST['update'])) {
-    $id = $_POST['id_producto'];
-    $nombre = $_POST['nombre'];
+    $id          = $_POST['id_producto'];
+    $nombre      = $_POST['nombre'];
     $descripcion = $_POST['descripcion'];
-    $precio = $_POST['precio'];
-    $stock = $_POST['stock'];
-    $id_tipo = $_POST['id_tipo'];
-    mysqli_query($conn, "UPDATE productos SET nombre='$nombre', descripcion='$descripcion', precio='$precio', stock='$stock', id_tipo='$id_tipo' WHERE id_producto=$id");
+    $precio      = $_POST['precio'];
+    $stock       = $_POST['stock'];
+    $id_tipo     = $_POST['id_tipo'];
+
+    $stmt = mysqli_prepare($conn, "UPDATE productos SET nombre=?, descripcion=?, precio=?, stock=?, id_tipo=? WHERE id_producto=?");
+    mysqli_stmt_bind_param($stmt, "ssdiii", $nombre, $descripcion, $precio, $stock, $id_tipo, $id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
     header("Location: productos.php");
+    exit;
 }
 
 // Eliminar producto
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    mysqli_query($conn, "DELETE FROM productos WHERE id_producto=$id");
+    if (is_numeric($id)) {
+        $stmt = mysqli_prepare($conn, "DELETE FROM productos WHERE id_producto=?");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
     header("Location: productos.php");
+    exit;
 }
 
+// Consultas de productos y tipos
 $productos = mysqli_query($conn, "SELECT p.*, t.nombre_tipo FROM productos p JOIN tipos_productos t ON p.id_tipo=t.id_tipo");
-$tipos = mysqli_query($conn, "SELECT * FROM tipos_productos");
+$tipos     = mysqli_query($conn, "SELECT * FROM tipos_productos");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -181,3 +199,4 @@ $tipos = mysqli_query($conn, "SELECT * FROM tipos_productos");
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
