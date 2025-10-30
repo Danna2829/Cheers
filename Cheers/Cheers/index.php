@@ -4,20 +4,30 @@ include("conexion.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
-    $password = md5($_POST['password']);
-    $sql = "SELECT * FROM usuarios WHERE email='$email' AND password='$password'";
-    $res = mysqli_query($conn, $sql);
+    $password = $_POST['password'];
 
-    if (mysqli_num_rows($res) == 1) {
+    // Preparar la consulta segura
+    $stmt = mysqli_prepare($conn, "SELECT id_usuario, nombre, rol, password FROM usuarios WHERE email = ?");
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+
+    if ($res && mysqli_num_rows($res) === 1) {
         $u = mysqli_fetch_assoc($res);
-        $_SESSION['usuario'] = $u['nombre'];
-        $_SESSION['rol'] = $u['rol'];
-        $_SESSION['id_usuario'] = $u['id_usuario'];
 
-        header("Location: " . ($u['rol'] == 'admin' ? "dashboard_admin.php" : "dashboard_cliente.php"));
-        exit;
+        // Verificar la contraseña
+        if (password_verify($password, $u['password'])) {
+            $_SESSION['usuario'] = $u['nombre'];
+            $_SESSION['rol'] = $u['rol'];
+            $_SESSION['id_usuario'] = $u['id_usuario'];
+
+            header("Location: " . ($u['rol'] == 'admin' ? "dashboard_admin.php" : "dashboard_cliente.php"));
+            exit;
+        } else {
+            $error = "Contraseña incorrecta.";
+        }
     } else {
-        $error = "Correo o contraseña incorrectos.";
+        $error = "Correo no registrado.";
     }
 }
 ?>
@@ -78,3 +88,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 </body>
 </html>
+
