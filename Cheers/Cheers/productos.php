@@ -46,7 +46,7 @@ $tipos = mysqli_query($conn, "SELECT * FROM tipos_productos");
 </head>
 <body>
 <nav class="navbar navbar-dark bg-dark px-3">
-  <span class="navbar-brand">🍷 Gestión de Productos</span>
+  <span class="navbar-brand">Gestión de Productos</span>
   <div>
     <a href="dashboard_admin.php" class="btn btn-outline-light btn-sm">Volver</a>
     <a href="logout.php" class="btn btn-danger btn-sm">Salir</a>
