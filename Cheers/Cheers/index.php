@@ -2,32 +2,39 @@
 session_start();
 include("conexion.php");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
+$error = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email    = trim($_POST['email']);
     $password = $_POST['password'];
 
-    // Preparar la consulta segura
-    $stmt = mysqli_prepare($conn, "SELECT id_usuario, nombre, rol, password FROM usuarios WHERE email = ?");
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-    $res = mysqli_stmt_get_result($stmt);
+    if (!empty($email) && !empty($password)) {
+        $stmt = mysqli_prepare($conn, "SELECT id_usuario, nombre, rol, password FROM usuarios WHERE email = ?");
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        $resultado = mysqli_stmt_get_result($stmt);
 
-    if ($res && mysqli_num_rows($res) === 1) {
-        $u = mysqli_fetch_assoc($res);
+        if ($resultado && mysqli_num_rows($resultado) === 1) {
+            $usuario = mysqli_fetch_assoc($resultado);
 
-        // Verificar la contraseña
-        if (password_verify($password, $u['password'])) {
-            $_SESSION['usuario'] = $u['nombre'];
-            $_SESSION['rol'] = $u['rol'];
-            $_SESSION['id_usuario'] = $u['id_usuario'];
+            if (password_verify($password, $usuario['password'])) {
+                $_SESSION['usuario']    = $usuario['nombre'];
+                $_SESSION['rol']        = $usuario['rol'];
+                $_SESSION['id_usuario'] = $usuario['id_usuario'];
 
-            header("Location: " . ($u['rol'] == 'admin' ? "dashboard_admin.php" : "dashboard_cliente.php"));
-            exit;
+                $destino = ($usuario['rol'] === 'admin') ? "dashboard_admin.php" : "dashboard_cliente.php";
+                header("Location: $destino");
+                exit;
+            } else {
+                $error = "Contraseña incorrecta.";
+            }
         } else {
-            $error = "Contraseña incorrecta.";
+            $error = "Correo no registrado.";
         }
+
+        mysqli_stmt_close($stmt);
     } else {
-        $error = "Correo no registrado.";
+        $error = "Por favor, completa todos los campos.";
     }
 }
 ?>
@@ -88,4 +95,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 </body>
 </html>
+
 
